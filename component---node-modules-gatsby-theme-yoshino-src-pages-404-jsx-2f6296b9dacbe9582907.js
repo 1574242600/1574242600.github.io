@@ -1,0 +1,2 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[7],{gVFJ:function(n,t,e){"use strict";e.r(t),e.d(t,"default",(function(){return r}));var u=e("q1tI"),o=e.n(u);function r(){return o.a.createElement("div",null,"404 Not Found")}}}]);
+//# sourceMappingURL=component---node-modules-gatsby-theme-yoshino-src-pages-404-jsx-2f6296b9dacbe9582907.js.map
