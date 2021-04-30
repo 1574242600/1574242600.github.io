@@ -1,0 +1,2 @@
+(self.webpackChunkblog=self.webpackChunkblog||[]).push([[636],{8374:function(n,e,u){"use strict";u.r(e),u.d(e,{default:function(){return l}});var t=u(7294);function l(){return t.createElement("div",null,"404 Not Found")}}}]);
+//# sourceMappingURL=component---node-modules-gatsby-theme-yoshino-src-pages-404-jsx-02767214fd5eb6b3613d.js.map
