@@ -1,4 +1,168 @@
-<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Nworm]]></title><description><![CDATA[一条咸鱼]]></description><link>https://nworm.icu</link><generator>GatsbyJS</generator><lastBuildDate>Sat, 01 May 2021 11:16:43 GMT</lastBuildDate><language><![CDATA[zh-cn]]></language><item><title><![CDATA[博客框架迁移完成]]></title><description><![CDATA[额，之前的一次迁移没记录下来，这次顺便就记录一下吧。]]></description><link>https://nworm.icu/post/blogqianyi-2021/</link><guid isPermaLink="false">https://nworm.icu/post/blogqianyi-2021/</guid><pubDate>Sat, 13 Feb 2021 12:00:00 GMT</pubDate><content:encoded>&lt;p&gt;额，之前的一次迁移没记录下来，这次顺便就记录一下吧。  &lt;/p&gt;
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Nworm]]></title><description><![CDATA[一条咸鱼]]></description><link>https://nworm.icu</link><generator>GatsbyJS</generator><lastBuildDate>Sat, 22 May 2021 15:36:28 GMT</lastBuildDate><language><![CDATA[zh-cn]]></language><item><title><![CDATA[Nginx webdav 在 Dolphin 上的一些坑]]></title><description><![CDATA[ps: 要不是webdav可以用cdn，我会用它？ 环境 服务器 OS: ubuntu 21.04 x64 Docker: v19.03.13, build cd8016b6bc ugeek/webdav:amd64-alpine (ed65583ea58e) nginx: v1.19.7 客户端 OS: Archlinux Dolphin: v21.04.0 坑]]></description><link>https://nworm.icu/post/nginx-webdav-dolphin-deken/</link><guid isPermaLink="false">https://nworm.icu/post/nginx-webdav-dolphin-deken/</guid><pubDate>Sat, 22 May 2021 23:50:00 GMT</pubDate><content:encoded>&lt;p&gt;ps: 要不是webdav可以用cdn，我会用它？&lt;/p&gt;
+
+              &lt;h2 id=&quot;环境&quot;&gt;
+                环境
+              &lt;/h2&gt;
+              &lt;h3 id=&quot;服务器&quot;&gt;
+                服务器
+              &lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;OS: ubuntu 21.04 x64&lt;/li&gt;
+&lt;li&gt;Docker: v19.03.13, build cd8016b6bc&lt;ul&gt;
+&lt;li&gt;ugeek/webdav:amd64-alpine (ed65583ea58e)&lt;ul&gt;
+&lt;li&gt;nginx: v1.19.7&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+
+              &lt;h3 id=&quot;客户端&quot;&gt;
+                客户端
+              &lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;OS: Archlinux&lt;/li&gt;
+&lt;li&gt;Dolphin: v21.04.0&lt;/li&gt;
+&lt;/ul&gt;
+
+              &lt;h2 id=&quot;坑&quot;&gt;
+                坑
+              &lt;/h2&gt;&lt;!--more--&gt;
+
+              &lt;h3 id=&quot;无法上传大文件状态码-413&quot;&gt;
+                无法上传大文件(状态码: 413)
+              &lt;/h3&gt;&lt;p&gt;webdav 镜像本身没有这个问题，client_max_body_size 在主机配置文件中值为0。 &lt;/p&gt;
+&lt;p&gt;我在另一台服务器使用 nginx 反代 webdav，但反代配置文件的 client_max_body_size 为 10M 导致无法上传大文件&lt;/p&gt;
+
+              &lt;h4 id=&quot;原因&quot;&gt;
+                原因
+              &lt;/h4&gt;&lt;p&gt;client_max_body_size 值过小&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Syntax:     client_max_body_size size;&lt;br&gt;Default:     client_max_body_size 1m;&lt;br&gt;Context:     http, server, location  &lt;/p&gt;
+&lt;p&gt;设置客户端请求正文的最大允许大小。如果请求中的大小超过配置值，则向客户端返回413(请求实体过大)错误。请注意浏览器无法正确显示此错误。将配置值设置为0将禁用对客户端请求正文大小的检查。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+              &lt;h4 id=&quot;解决方法&quot;&gt;
+                解决方法
+              &lt;/h4&gt;&lt;p&gt;请检查 webdav 主机配置文件的 client_max_body_size，并设置适当的值&lt;/p&gt;
+
+              &lt;h3 id=&quot;无法创建文件夹状态码-409&quot;&gt;
+                无法创建文件夹(状态码: 409)
+              &lt;/h3&gt;
+              &lt;h4 id=&quot;原因&quot;&gt;
+                原因
+              &lt;/h4&gt;&lt;p&gt;创建文件夹时，Dolphin 发送的 MKCOL 请求，路径未以 &amp;quot;/&amp;quot; 结尾。nginx 对于这种行为直接返回 ”409 Conflict“&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/nginx/nginx/blob/5e5fa2e9e57b713e445b1737005ff6a202bda8ad/src/http/modules/ngx_http_dav_module.c#L504-L508&quot;&gt;ngx_http_dav_module.c (504-508)&lt;/a&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-c&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;r&lt;span class=&quot;token operator&quot;&gt;-&gt;&lt;/span&gt;uri&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;data&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;r&lt;span class=&quot;token operator&quot;&gt;-&gt;&lt;/span&gt;uri&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;len &lt;span class=&quot;token operator&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&apos;/&apos;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
+   &lt;span class=&quot;token function&quot;&gt;ngx_log_error&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;NGX_LOG_ERR&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; r&lt;span class=&quot;token operator&quot;&gt;-&gt;&lt;/span&gt;connection&lt;span class=&quot;token operator&quot;&gt;-&gt;&lt;/span&gt;log&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+               &lt;span class=&quot;token string&quot;&gt;&quot;MKCOL can create a collection only&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+   &lt;span class=&quot;token keyword&quot;&gt;return&lt;/span&gt; NGX_HTTP_CONFLICT&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;至于请求路径是否该以 &amp;quot;/&amp;quot; 结尾，&lt;a href=&quot;https://datatracker.ietf.org/doc/html/rfc2518&quot;&gt;rfc2518&lt;/a&gt; 中好像没有规定，不过在&lt;a href=&quot;https://datatracker.ietf.org/doc/html/rfc2518#section-8.3.3&quot;&gt;示例&lt;/a&gt;里路径以 &amp;quot;/&amp;quot; 结尾。  &lt;/p&gt;
+
+              &lt;h4 id=&quot;解决方法&quot;&gt;
+                解决方法
+              &lt;/h4&gt;&lt;p&gt;方法1: 配置文件&lt;br&gt;使用 rewrite 重写路径  &lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-nginx&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token variable&quot;&gt;$request_method&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; MKCOL&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt; 
+    &lt;span class=&quot;token keyword&quot;&gt;rewrite&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;^&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;^&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;$ $&lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;break&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt; 
+&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;方法2: 删除相关代码，重新编译&lt;br&gt;删除 ngx_http_dav_module.c 中相关的代码，重新编译。&lt;/p&gt;
+
+              &lt;h3 id=&quot;无法删除文件夹状态码-409&quot;&gt;
+                无法删除文件夹(状态码: 409)
+              &lt;/h3&gt;
+              &lt;h4 id=&quot;原因&quot;&gt;
+                原因
+              &lt;/h4&gt;&lt;p&gt;删除文件夹时，Dolphin 发送的 DELETE 请求，目录的路径未以 &amp;quot;/&amp;quot; 结尾。&lt;br&gt;nginx 会先判断是否为文件夹，如果是，就再判断路径是否以 &amp;quot;/&amp;quot; 结尾。不以&amp;quot;/&amp;quot;结尾返回 ”409 Conflict“&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/nginx/nginx/blob/5e5fa2e9e57b713e445b1737005ff6a202bda8ad/src/http/modules/ngx_http_dav_module.c#L357-L364&quot;&gt;ngx_http_dav_module.c (357-364)&lt;/a&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-c&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;ngx_is_dir&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;&amp;amp;&lt;/span&gt;fi&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
+
+    &lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;r&lt;span class=&quot;token operator&quot;&gt;-&gt;&lt;/span&gt;uri&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;data&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;r&lt;span class=&quot;token operator&quot;&gt;-&gt;&lt;/span&gt;uri&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;len &lt;span class=&quot;token operator&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&apos;/&apos;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;token function&quot;&gt;ngx_log_error&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;NGX_LOG_ERR&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;r&lt;span class=&quot;token operator&quot;&gt;-&gt;&lt;/span&gt;connection&lt;span class=&quot;token operator&quot;&gt;-&gt;&lt;/span&gt;log&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; NGX_EISDIR&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+                        &lt;span class=&quot;token string&quot;&gt;&quot;DELETE \&quot;%s\&quot; failed&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; path&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;data&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;token keyword&quot;&gt;return&lt;/span&gt; NGX_HTTP_CONFLICT&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+              &lt;h4 id=&quot;解决方法&quot;&gt;
+                解决方法
+              &lt;/h4&gt;&lt;p&gt;方法1: 配置文件&lt;br&gt;使用 rewrite 重写路径  &lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-nginx&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;-&lt;/span&gt;d &lt;span class=&quot;token variable&quot;&gt;$request_filename&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt; 
+    &lt;span class=&quot;token keyword&quot;&gt;rewrite&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;^&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;^&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;$ $&lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;break&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt; 
+&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;方法2: 删除相关代码，重新编译&lt;br&gt;删除 ngx_http_dav_module.c 中相关的代码，重新编译。&lt;/p&gt;
+
+              &lt;h3 id=&quot;无法复制移动文件夹状态码-409&quot;&gt;
+                无法复制/移动文件夹(状态码: 409)
+              &lt;/h3&gt;
+              &lt;h4 id=&quot;原因&quot;&gt;
+                原因
+              &lt;/h4&gt;&lt;p&gt;没错，还tm是&amp;quot;/&amp;quot;的问题。。。  &lt;/p&gt;
+&lt;p&gt;复制/移动文件夹时发送的 COPY/MOVE 请求，目录的路径和 Destination 头未以&amp;quot;/&amp;quot;结尾。Nginx 返回 409  &lt;/p&gt;
+&lt;p&gt;ps: 复制文件夹的话 Dolphin 问题不大，因为它不会直接发送复制文件夹的请求。它会先创建文件夹，再复制文件。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/nginx/nginx/blob/5e5fa2e9e57b713e445b1737005ff6a202bda8ad/src/http/modules/ngx_http_dav_module.c#L637-L646&quot;&gt;ngx_http_dav_module.c (637-646)&lt;/a&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-c&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;r&lt;span class=&quot;token operator&quot;&gt;-&gt;&lt;/span&gt;uri&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;data&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;r&lt;span class=&quot;token operator&quot;&gt;-&gt;&lt;/span&gt;uri&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;len &lt;span class=&quot;token operator&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&apos;/&apos;&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;last &lt;span class=&quot;token operator&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&apos;/&apos;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;token operator&quot;&gt;||&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;r&lt;span class=&quot;token operator&quot;&gt;-&gt;&lt;/span&gt;uri&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;data&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;r&lt;span class=&quot;token operator&quot;&gt;-&gt;&lt;/span&gt;uri&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;len &lt;span class=&quot;token operator&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&apos;/&apos;&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;last &lt;span class=&quot;token operator&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&apos;/&apos;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;token function&quot;&gt;ngx_log_error&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;NGX_LOG_ERR&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; r&lt;span class=&quot;token operator&quot;&gt;-&gt;&lt;/span&gt;connection&lt;span class=&quot;token operator&quot;&gt;-&gt;&lt;/span&gt;log&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+                    &lt;span class=&quot;token string&quot;&gt;&quot;both URI \&quot;%V\&quot; and \&quot;Destination\&quot; URI \&quot;%V\&quot; &quot;&lt;/span&gt;
+                    &lt;span class=&quot;token string&quot;&gt;&quot;should be either collections or non-collections&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+                    &lt;span class=&quot;token operator&quot;&gt;&amp;amp;&lt;/span&gt;r&lt;span class=&quot;token operator&quot;&gt;-&gt;&lt;/span&gt;uri&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;&amp;amp;&lt;/span&gt;dest&lt;span class=&quot;token operator&quot;&gt;-&gt;&lt;/span&gt;value&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;return&lt;/span&gt; NGX_HTTP_CONFLICT&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+              &lt;h4 id=&quot;解决方法&quot;&gt;
+                解决方法
+              &lt;/h4&gt;&lt;p&gt;适用于 Dolphin 或类似机制的客户端无法复制文件夹的解决方法同 &lt;a href=&quot;#&quot;&gt;无法创建文件夹&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;通用:&lt;br&gt;方法1: 配置文件&lt;br&gt;使用 rewrite 和 more_set_input_headers(需要 headers-more-nginx-module) 重写路径和 Destination 头&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-nginx&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;set&lt;/span&gt; &lt;span class=&quot;token variable&quot;&gt;$is_copy_or_move&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;token keyword&quot;&gt;set&lt;/span&gt; &lt;span class=&quot;token variable&quot;&gt;$is_dir&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;-&lt;/span&gt;d &lt;span class=&quot;token variable&quot;&gt;$request_filename&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt; 
+    &lt;span class=&quot;token keyword&quot;&gt;set&lt;/span&gt; &lt;span class=&quot;token variable&quot;&gt;$is_dir&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt; 
+&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token variable&quot;&gt;$request_method&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; COPY&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;set&lt;/span&gt; &lt;span class=&quot;token variable&quot;&gt;$is_copy_or_move&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token variable&quot;&gt;$request_method&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; MOVE&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;set&lt;/span&gt; &lt;span class=&quot;token variable&quot;&gt;$is_copy_or_move&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;set&lt;/span&gt; &lt;span class=&quot;token variable&quot;&gt;$is_rewrite&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&quot;${is_dir}${is_copy_or_move}&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token variable&quot;&gt;$is_rewrite&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;11&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt; 
+    more_set_input_headers &lt;span class=&quot;token string&quot;&gt;&apos;Destination: $http_destination/&apos;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;rewrite&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;^&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;^&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;$ $&lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;break&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;方法2: 删除相关代码，重新编译&lt;br&gt;删除 ngx_http_dav_module.c 中相关的代码，重新编译。&lt;/p&gt;
+&lt;!-- todo
+## 不显示含非英文字符文件及文件夹
+这个我不确定，不过大概率是编码的问题。
+--&gt;
+
+
+              &lt;h2 id=&quot;成果&quot;&gt;
+                成果
+              &lt;/h2&gt;&lt;p&gt;这是修复以上问题的 docker 镜像
+&lt;a href=&quot;https://hub.docker.com/r/1574242600/webdav&quot;&gt;https://hub.docker.com/r/1574242600/webdav&lt;/a&gt;&lt;/p&gt;
+
+              &lt;h2 id=&quot;参考&quot;&gt;
+                参考
+              &lt;/h2&gt;&lt;ol&gt;
+&lt;li&gt;&lt;a href=&quot;http://netlab.dhis.org/wiki/ru:software:nginx:webdav&quot;&gt;Nginx and Microsoft Windows WebClient (WebDav)&lt;/a&gt;  / &lt;a href=&quot;https://web.archive.org/web/20201026211658/http://netlab.dhis.org/wiki/ru:software:nginx:webdav&quot;&gt;Archived&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://cetteup.com/36/cant-create-or-delete-directories-on-an-nginx-webdav-server-here-is-how-to-fix-that/&quot;&gt;Can’t create or delete directories on an NGINX WebDAV server? Here’s how to fix that!&lt;/a&gt; / &lt;a href=&quot;https://web.archive.org/web/20210521142218/https://cetteup.com/36/cant-create-or-delete-directories-on-an-nginx-webdav-server-here-is-how-to-fix-that/&quot;&gt;Archived&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://datatracker.ietf.org/doc/html/rfc2518&quot;&gt;rfc2518&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+</content:encoded></item><item><title><![CDATA[博客框架迁移完成]]></title><description><![CDATA[额，之前的一次迁移没记录下来，这次顺便就记录一下吧。]]></description><link>https://nworm.icu/post/blogqianyi-2021/</link><guid isPermaLink="false">https://nworm.icu/post/blogqianyi-2021/</guid><pubDate>Sat, 13 Feb 2021 12:00:00 GMT</pubDate><content:encoded>&lt;p&gt;额，之前的一次迁移没记录下来，这次顺便就记录一下吧。  &lt;/p&gt;
 &lt;!--more--&gt;
 
 
