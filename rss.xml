@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Nworm]]></title><description><![CDATA[一条咸鱼]]></description><link>https://nworm.icu</link><generator>GatsbyJS</generator><lastBuildDate>Sat, 22 May 2021 15:36:28 GMT</lastBuildDate><language><![CDATA[zh-cn]]></language><item><title><![CDATA[Nginx webdav 在 Dolphin 上的一些坑]]></title><description><![CDATA[ps: 要不是webdav可以用cdn，我会用它？ 环境 服务器 OS: ubuntu 21.04 x64 Docker: v19.03.13, build cd8016b6bc ugeek/webdav:amd64-alpine (ed65583ea58e) nginx: v1.19.7 客户端 OS: Archlinux Dolphin: v21.04.0 坑]]></description><link>https://nworm.icu/post/nginx-webdav-dolphin-deken/</link><guid isPermaLink="false">https://nworm.icu/post/nginx-webdav-dolphin-deken/</guid><pubDate>Sat, 22 May 2021 23:50:00 GMT</pubDate><content:encoded>&lt;p&gt;ps: 要不是webdav可以用cdn，我会用它？&lt;/p&gt;
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Nworm]]></title><description><![CDATA[一条咸鱼]]></description><link>https://nworm.icu</link><generator>GatsbyJS</generator><lastBuildDate>Sat, 22 May 2021 15:42:27 GMT</lastBuildDate><language><![CDATA[zh-cn]]></language><item><title><![CDATA[Nginx webdav 在 Dolphin 上的一些坑]]></title><description><![CDATA[ps: 要不是webdav可以用cdn，我会用它？ 环境 服务器 OS: ubuntu 21.04 x64 Docker: v19.03.13, build cd8016b6bc ugeek/webdav:amd64-alpine (ed65583ea58e) nginx: v1.19.7 客户端 OS: Archlinux Dolphin: v21.04.0]]></description><link>https://nworm.icu/post/nginx-webdav-dolphin-deken/</link><guid isPermaLink="false">https://nworm.icu/post/nginx-webdav-dolphin-deken/</guid><pubDate>Sat, 22 May 2021 23:50:00 GMT</pubDate><content:encoded>&lt;p&gt;ps: 要不是webdav可以用cdn，我会用它？&lt;/p&gt;
 
               &lt;h2 id=&quot;环境&quot;&gt;
                 环境
@@ -20,16 +20,15 @@
                 客户端
               &lt;/h3&gt;&lt;ul&gt;
 &lt;li&gt;OS: Archlinux&lt;/li&gt;
-&lt;li&gt;Dolphin: v21.04.0&lt;/li&gt;
-&lt;/ul&gt;
+&lt;li&gt;Dolphin: v21.04.0&lt;!--more--&gt;
 
               &lt;h2 id=&quot;坑&quot;&gt;
                 坑
-              &lt;/h2&gt;&lt;!--more--&gt;
-
+              &lt;/h2&gt;
               &lt;h3 id=&quot;无法上传大文件状态码-413&quot;&gt;
                 无法上传大文件(状态码: 413)
-              &lt;/h3&gt;&lt;p&gt;webdav 镜像本身没有这个问题，client_max_body_size 在主机配置文件中值为0。 &lt;/p&gt;
+              &lt;/h3&gt;webdav 镜像本身没有这个问题，client_max_body_size 在主机配置文件中值为0。 &lt;/li&gt;
+&lt;/ul&gt;
 &lt;p&gt;我在另一台服务器使用 nginx 反代 webdav，但反代配置文件的 client_max_body_size 为 10M 导致无法上传大文件&lt;/p&gt;
 
               &lt;h4 id=&quot;原因&quot;&gt;
